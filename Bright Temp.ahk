@@ -29,22 +29,22 @@ RegRead, Temp,HKEY_CURRENT_USER\SOFTWARE\WinM,Temperature
 RegRead, CheckStatus,HKEY_CURRENT_USER\SOFTWARE\WinM,MouseControl
 
 Gui +hWndhMainWnd
-Gui Color, 0xD6AB03
+Gui Color, 0xFEFFDD
 Gui Add, Slider, x16 y61 w321 h44  Line1 Page5 TickInterval1 Range0-100 Thick20 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
 Gui Add, Slider, x16 y184 w321 h43 Line1 Page100 TickInterval1 Range600-5600 Thick20 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
-Gui Add, CheckBox, x8 y248 w143 h23 gGChecked vVChecked, Ekran Üst Kenarında Işık Alt Kenarında Ses Kontrol
+Gui Add, CheckBox, x8 y248 w243 h43 gGChecked vVChecked, Control The Volume At The Bottom Edge Of The Light At The Top Edge Of The Screen With The Mouse Wheel
 GuiControl,,VChecked,% CheckStatus
 
-Gui Font, s13 c0xFBFBFB
-Gui Add, Text, x152 y32 w59 h23 +0x200 vVBRtext, % Bright
-Gui Add, Text, x152 y152 w60 h23 +0x200 vVTPtext, % Temp
+Gui Font, s13 ;c0xFBFBFB
+Gui Add, Text, x172 y32 w59 h23 +0x200 vVBRtext, % Bright
+Gui Add, Text, x162 y152 w60 h23 +0x200 vVTPtext, % Temp
 Gui Font
-Gui Add, GroupBox, x8 y8 w335 h107, Parlaklık:
-Gui Add, GroupBox, x8 y128 w336 h108, Sıcaklık:
-Gui Add, Button, x8 y280 w336 h26 gSifirla, Sıfırla
+Gui Add, GroupBox, x8 y8 w335 h107, Brightness:
+Gui Add, GroupBox, x8 y128 w336 h108, Temperature:
+Gui Add, Button, x290 y270 w50 h26 gSifirla, Reset
 
 if GuiGoster == 1
-	Gui Show, w350 h315, Parlaklık Sıcaklık Kontrolü
+	Gui Show, w350 h315, Brightness and Temperature Control
 
 
 
@@ -113,11 +113,11 @@ return
 #if CheckStatus = 1
 
 	;Başlat Çubuğu üzernde orta tuşla tekerlekle ses kontrolü
-		MouseIsOver(WinTitle) 
-	{
-		MouseGetPos,,, Win
-		return WinExist(WinTitle . " ahk_id " . Win)
-	}
+MouseIsOver(WinTitle) 
+{
+	MouseGetPos,,, Win
+	return WinExist(WinTitle . " ahk_id " . Win)
+}
 ~MButton::
 if(MouseIsOVer("ahk_class Shell_TrayWnd") != "0x0")
 	Send,{Volume_Mute}
