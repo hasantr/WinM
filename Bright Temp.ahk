@@ -16,6 +16,7 @@ SetBatchLines -1
 RegRead, FirstStartVal,HKEY_CURRENT_USER\SOFTWARE\WinM,FirstStart
 if FirstStartVal != 1
 {	
+	GuiGoster := 1
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, Temperature, 6400
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, Brightness, 50
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, MouseControl, 1
@@ -31,7 +32,7 @@ Gui +hWndhMainWnd
 Gui Color, 0xD6AB03
 Gui Add, Slider, x16 y61 w321 h44  Line1 Page5 TickInterval1 Range0-100 Thick20 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
 Gui Add, Slider, x16 y184 w321 h43 Line1 Page100 TickInterval1 Range600-5600 Thick20 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
-Gui Add, CheckBox, x8 y248 w143 h23 gGChecked vVChecked, Ekran Tepesinde Kontrol
+Gui Add, CheckBox, x8 y248 w143 h23 gGChecked vVChecked, Ekran Üst Kenarında Işık Alt Kenarında Ses Kontrol
 GuiControl,,VChecked,% CheckStatus
 
 Gui Font, s13 c0xFBFBFB
@@ -42,7 +43,8 @@ Gui Add, GroupBox, x8 y8 w335 h107, Parlaklık:
 Gui Add, GroupBox, x8 y128 w336 h108, Sıcaklık:
 Gui Add, Button, x8 y280 w336 h26 gSifirla, Sıfırla
 
-Gui Show, w350 h315, Parlaklık Sıcaklık Kontrolü
+if GuiGoster == 1
+	Gui Show, w350 h315, Parlaklık Sıcaklık Kontrolü
 
 
 
@@ -109,8 +111,22 @@ return
 ; SCRIPT ========================================================================================================================
 ;#Numpad1::Monitor.SetBrightness(100, 100, 100)
 #if CheckStatus = 1
+
+	;Başlat Çubuğu üzernde orta tuşla tekerlekle ses kontrolü
+		MouseIsOver(WinTitle) 
+	{
+		MouseGetPos,,, Win
+		return WinExist(WinTitle . " ahk_id " . Win)
+	}
+~MButton::
+if(MouseIsOVer("ahk_class Shell_TrayWnd") != "0x0")
+	Send,{Volume_Mute}
+return
+
 WheelDown::
 MouseGetPos,XX,YY
+if(YY >= A_ScreenHeight - 2)
+	Send,{Volume_Down}
 if (YY <= 3) && (XX <= A_ScreenWidth / 2)
 	BR := -5
 if (YY <= 3) && (XX >= A_ScreenWidth / 2)
@@ -122,6 +138,8 @@ else
 return
 WheelUp::
 MouseGetPos,XX,YY
+if(YY >= A_ScreenHeight - 2)
+	Send,{Volume_Up}
 if (YY <= 3) && (XX <= A_ScreenWidth / 2)
 	BR := 5
 if (YY <= 3) && (XX >= A_ScreenWidth / 2)
@@ -140,7 +158,7 @@ if (Bright <= 99 && BR == 5 ) || (Bright >= 1 && BR == -5)
 if (Temp <= 6501 && TP == 100) || (Temp >= 601 && TP == -100)
 	Temp += TP
 
-ToolTip("Parlaklık: "  Bright " Sıcaklık: "  Temp , , , 1, 1000)
+
 
 if Temp < 600
 	Temp := 600
@@ -152,16 +170,17 @@ if Bright < 1
 	Bright := 3
 Monitor.SetColorTemperature(Temp, Bright / 100)
 BR := 0 , TP := 0
+ToolTip("Parlaklık: "  Bright " Sıcaklık: "  Temp , , , 1, 1500)
 return
 
 #if
 
 
 ; Win + Numpad Div (/)    -> Get Brightness
-#NumpadDiv::
-GetBrightness := Monitor.GetBrightness()
-MsgBox % "Red:`t" GetBrightness.Red "`nGreen:`t" GetBrightness.Green "`nBlue:`t" GetBrightness.Blue
-return
+;#NumpadDiv::
+;GetBrightness := Monitor.GetBrightness()
+;MsgBox % "Red:`t" GetBrightness.Red "`nGreen:`t" GetBrightness.Green "`nBlue:`t" GetBrightness.Blue
+;return
 
 
 ; INCLUDES ======================================================================================================================
