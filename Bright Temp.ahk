@@ -1,16 +1,16 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+﻿; #Warn  ; Enable warnings to assist with detecting common errors.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 
 ; GLOBAL SETTINGS ===============================================================================================================
 
-#NoEnv
+;?#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force
 #Persistent
 CoordMode, Mouse, Screen
 SetBatchLines -1
+
 
 
 RegRead, FirstStartVal,HKEY_CURRENT_USER\SOFTWARE\WinM,FirstStart
@@ -27,6 +27,27 @@ if FirstStartVal != 1
 RegRead, Bright,HKEY_CURRENT_USER\SOFTWARE\WinM,Brightness
 RegRead, Temp,HKEY_CURRENT_USER\SOFTWARE\WinM,Temperature
 RegRead, CheckStatus,HKEY_CURRENT_USER\SOFTWARE\WinM,MouseControl
+
+
+Menu FileMenu, Add, &Exit, ExitAll
+Menu FileMenu, Icon, &Exit, shell32.dll,28
+Menu MenuBar, Add, &File, :FileMenu
+Menu MenuBar, Icon, &File, shell32.dll,5
+
+Menu Heys, Add, &Hotkeys, HotkeysGui
+Menu Heys, Icon, &Hotkeys, shell32.dll,174
+Menu MenuBar, Add, &Hotkeys, :Heys
+Menu MenuBar, Icon, &Hotkeys, shell32.dll,174
+
+Menu AboutMenu, Add, &Help`tF1, Help
+Menu AboutMenu, Icon, &Help`tF1, shell32.dll, 24
+Menu AboutMenu, Add, &About, About
+Menu AboutMenu, Icon, &About, shell32.dll, 278
+Menu MenuBar, Add, &Help, :AboutMenu
+Menu MenuBar, Icon, &Help, shell32.dll, 24
+Gui Menu, MenuBar
+
+
 
 Gui +hWndhMainWnd
 Gui Color, 0xFEFFDD
@@ -50,7 +71,10 @@ if GuiGoster == 1
 
 TrayMinimizer.Init(false)	; <-- Initializes and optionally minimizes
 
+#Include Bright Temp HotkeyGui.ahk
+
 Return
+
 
 
 
@@ -67,6 +91,57 @@ SlowMouse(a,s){
 	DllCall("SystemParametersInfo", UInt, 0x71, UInt, 0, Ptr, a ? (s>0 AND s<=20 ? s : 10) : OrigMouseSpeed, UInt, 0)
 }
 
+HotkeysGui:
+Gui HK:Show, w374 h389, Hotkeys Panel
+return
+
+
+
+About:
+MsgBox,64,İnfo,
+(
+It aims to make the computer's screen brightness as easy as a smartphone's.
+
+Developed with AutoHotkey. The brightness class of Jinzime is based on its foundation.
+
+It was developed by hasantr using many functions belonging to the AHK community.
+
+For information and advice: hasante@ymail.com
+)
+return
+
+Help:
+MsgBox,64,Help,
+(
+                                                      
+Control brightness and sound
+from screen corners with the mouse wheel.                                                 
+ _________________________    
+|Brightnes : Temperature| 
+|                   	      | 
+|                   	      |
+|                   	      |
+|                   	      | 
+|                   	      | 
+|_____Sound Control_____|       
+                   /     \          
+                 /______\         
+                           
+                                                      
+ Controls the brightness level when you move the mouse cursor to the upper left half of the screen and start turning the wheel.                                                     
+                                                      
+ Controls the color temperature level when you move the mouse cursor to the upper right half of the screen and start turning the wheel.                                                     
+                                                      
+ Controls the volume when you move the mouse cursor to the bottom edge of the screen and start turning the wheel.                                                     
+                                                      
+ Turns on/off the volume when the middle mouse button is clicked on the Status Bar.                                                     
+                                                      
+ The application interface comes with one click on the icon in the notification area.                                                     
+
+ Edge controls can be disabled from the interface.
+                                                         
+)
+return
 
 GBright:
 GuiControlGet,Bright,,VBright,
@@ -107,6 +182,9 @@ GuiClose:
 TrayMinimizer.Minimize()
 return
 
+ExitAll:
+ExitApp
+return
 
 ; SCRIPT ========================================================================================================================
 ;#Numpad1::Monitor.SetBrightness(100, 100, 100)
@@ -125,8 +203,13 @@ return
 
 WheelDown::
 MouseGetPos,XX,YY
-if(YY >= A_ScreenHeight - 2)
+if(YY >= A_ScreenHeight - 2){
 	Send,{Volume_Down}
+	SoundGet, master_volume
+	ToolTip("Ses: "  Round(master_volume) , , , 1, 2000)
+	return
+}
+
 if (YY <= 3) && (XX <= A_ScreenWidth / 2)
 	BR := -5
 if (YY <= 3) && (XX >= A_ScreenWidth / 2)
@@ -138,8 +221,13 @@ else
 return
 WheelUp::
 MouseGetPos,XX,YY
-if(YY >= A_ScreenHeight - 2)
+if(YY >= A_ScreenHeight - 2){
 	Send,{Volume_Up}
+	SoundGet, master_volume
+	ToolTip("Ses: "  Round(master_volume) , , , 1, 2000)
+	return
+}
+
 if (YY <= 3) && (XX <= A_ScreenWidth / 2)
 	BR := 5
 if (YY <= 3) && (XX >= A_ScreenWidth / 2)
@@ -171,6 +259,12 @@ if Bright < 1
 Monitor.SetColorTemperature(Temp, Bright / 100)
 BR := 0 , TP := 0
 ToolTip("Parlaklık: "  Bright " Sıcaklık: "  Temp , , , 1, 1500)
+
+
+GuiControl,,VTPtext,% Temp
+GuiControl,,VBRtext,% Bright
+GuiControl,,VBright, % Bright
+GuiControl,,VTemp, % Temp
 return
 
 #if
