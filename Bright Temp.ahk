@@ -4,31 +4,42 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 
 
 ; GLOBAL SETTINGS ===============================================================================================================
+Menu, Tray, NoStandard
 
-;?#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force
 #Persistent
+
 CoordMode, Mouse, Screen
 SetBatchLines -1
-
 
 
 RegRead, FirstStartVal,HKEY_CURRENT_USER\SOFTWARE\WinM,FirstStart
 if FirstStartVal != 1
 {	
 	GuiGoster := 1
+	RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run,BrightTempAutoStart,%A_ScriptFullPath%
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, Temperature, 6400
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, Brightness, 50
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, MouseControl, 1
 	RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, FirstStart, 1
 }
 
-
+RegRead, AutoStart, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run,BrightTempAutoStart
 RegRead, Bright,HKEY_CURRENT_USER\SOFTWARE\WinM,Brightness
 RegRead, Temp,HKEY_CURRENT_USER\SOFTWARE\WinM,Temperature
 RegRead, CheckStatus,HKEY_CURRENT_USER\SOFTWARE\WinM,MouseControl
 
+Monitor.SetColorTemperature(Temp, Bright / 100)
 
+Menu Tray, Add, &Save Settings, RegistrySave
+Menu Tray, Icon, &Save Settings, shell32.dll, 259
+Menu Tray, Add, Hotkeys..., HotkeysGui
+Menu Tray, Icon, Hotkeys..., shell32.dll, 166
+
+
+Menu FileMenu, Add, &Save Settings, RegistrySave
+Menu FileMenu, Icon, &Save Settings, shell32.dll, 259
 Menu FileMenu, Add, &Exit, ExitAll
 Menu FileMenu, Icon, &Exit, shell32.dll,28
 Menu MenuBar, Add, &File, :FileMenu
@@ -51,10 +62,17 @@ Gui Menu, MenuBar
 
 Gui +hWndhMainWnd
 Gui Color, 0xFEFFDD
-Gui Add, Slider, x16 y61 w321 h44  Line1 Page5 TickInterval1 Range0-100 Thick20 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
-Gui Add, Slider, x16 y184 w321 h43 Line1 Page100 TickInterval1 Range600-5600 Thick20 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
-Gui Add, CheckBox, x8 y248 w243 h43 gGChecked vVChecked, Control The Volume At The Bottom Edge Of The Light At The Top Edge Of The Screen With The Mouse Wheel
+Gui Add, Slider, x16 y61 w321 h44  Line2 Page5 TickInterval3 Range0-100 Thick30 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
+Gui Add, Slider, x16 y184 w321 h43 Line2 Page100 TickInterval180 Range600-5600 Thick30 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
+Gui Add, CheckBox, x8 y248 w243 h16 gGChecked vVChecked, Control of the edges of the screen.
+Gui Add, CheckBox, x8 y270 w243 h16 vVAutoStart gGAutoStart, Start at the start of the system.
 GuiControl,,VChecked,% CheckStatus
+
+if(AutoStart == A_ScriptFullPath)
+	GuiControl,,VAutoStart, 1
+else
+	GuiControl,,VAutoStart,0
+
 
 Gui Font, s13 ;c0xFBFBFB
 Gui Add, Text, x172 y32 w59 h23 +0x200 vVBRtext, % Bright
@@ -71,8 +89,8 @@ if GuiGoster == 1
 
 TrayMinimizer.Init(false)	; <-- Initializes and optionally minimizes
 
+;#Include %A_ScriptDir% \"Bright Temp HotkeyGui.ahk"
 #Include Bright Temp HotkeyGui.ahk
-
 Return
 
 
@@ -92,10 +110,16 @@ SlowMouse(a,s){
 }
 
 HotkeysGui:
-Gui HK:Show, w374 h389, Hotkeys Panel
+Gui HK:Show, w374 h430, Hotkeys Panel
 return
 
-
+GAutoStart:
+GuiControlGet,AutoStartChcx,,VAutoStart
+if(AutoStartChcx == 1)
+	RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run,BrightTempAutoStart,%A_ScriptFullPath%
+else
+	RegDelete,  HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run,BrightTempAutoStart
+return
 
 About:
 MsgBox,64,İnfo,
@@ -117,15 +141,15 @@ MsgBox,64,Help,
 Control brightness and sound
 from screen corners with the mouse wheel.                                                 
  _________________________    
-|Brightnes : Temperature| 
-|                   	      | 
-|                   	      |
-|                   	      |
-|                   	      | 
-|                   	      | 
+|.Brightnes : Temperature.| 
+|.........................| 
+|.........................|
+|.........................|
+|.........................| 
+|.........................| 
 |_____Sound Control_____|       
-                   /     \          
-                 /______\         
+........./     \          
+......../_______\         
                            
                                                       
  Controls the brightness level when you move the mouse cursor to the upper left half of the screen and start turning the wheel.                                                     
@@ -177,6 +201,33 @@ GuiControlGet,CheckStatus,,VChecked
 RegWrite, REG_SZ, HKEY_CURRENT_USER\SOFTWARE\WinM, MouseControl, % CheckStatus
 return
 
+
+
+RegistrySave:
+RegistrySave := "Windows Registry Editor Version 5.00" "`r `n" "`r `n" "[HKEY_CURRENT_USER\Software\WinM]" "`r `n"
+Loop, Reg, HKEY_CURRENT_USER\Software\WinM
+{
+	if (A_LoopRegType = "key")
+		value := ""
+	else
+	{
+		RegRead, value
+		if ErrorLevel
+			value := "*error*"	
+	}
+	RegistrySave :=  RegistrySave """" A_LoopRegName """=" """" value """" . "`r `n"
+	
+}
+FileSelectFile, SavePathSelect, S8, , Save Settings Registry ,Registry File (*.reg)
+
+if (SavePathSelect != "")
+	FileAppend,%RegistrySave%,%SavePathSelect%.reg
+
+return
+
+
+
+
 GuiEscape:
 GuiClose:
 TrayMinimizer.Minimize()
@@ -224,7 +275,7 @@ MouseGetPos,XX,YY
 if(YY >= A_ScreenHeight - 2){
 	Send,{Volume_Up}
 	SoundGet, master_volume
-	ToolTip("Ses: "  Round(master_volume) , , , 1, 2000)
+	ToolTip("Sound: "  Round(master_volume) , , , 1, 2000)
 	return
 }
 
@@ -258,7 +309,7 @@ if Bright < 1
 	Bright := 3
 Monitor.SetColorTemperature(Temp, Bright / 100)
 BR := 0 , TP := 0
-ToolTip("Parlaklık: "  Bright " Sıcaklık: "  Temp , , , 1, 1500)
+ToolTip("Brightness: "  Bright " Temperature: "  Temp , , , 1, 1500)
 
 
 GuiControl,,VTPtext,% Temp
