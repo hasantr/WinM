@@ -1,4 +1,9 @@
-﻿Loop,7
+﻿
+
+
+;Gosub, BtnSave
+
+Loop,7
 	{
 		RegRead, CHstat%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,CHKey%A_Index%
 		RegRead, HK%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,HKey%A_Index%
@@ -8,7 +13,8 @@
 				Hotkey,  % "#" HK%A_index% , HKg%A_index%
 		Else
 			Hotkey, % HK%A_index%, HKg%A_index%
-	}	
+	}
+	
 Gui HK:Add, Hotkey, x16 y64 w120 h21 vHK1 , %HK1%
 Gui HK:Add, Hotkey, x192 y64 w120 h21 vHK2 , %HK2%
 Gui HK:Add, Hotkey, x16 y136 w120 h21 vHK3 , %HK3%
@@ -35,13 +41,19 @@ Gui HK:Add, Text, x193 y104 w125 h23 +0x200, Temperature Decreasing:
 Gui HK:Add, Text, x16 y208 w120 h23 +0x200, Sound Increasing:
 Gui HK:Add, Text, x16 y288 w120 h23 +0x200, Sound On/Off Switch:
 Gui HK:Add, Text, x192 y208 w120 h23 +0x200, Sound Decreasing
+
+
+
 return
 keydown:
 ToolTip, %A_ThisHotkey% was pressed
+
 Return
+
 GuiHKEscape:
 GuiHKClose:
 ExitApp
+
 BtnSave:
 Loop,7
 {
@@ -56,34 +68,42 @@ Loop,7
 }
 Reload
 return
+
+
 HKg1:
 BR := 5
 Gosub,SetBRandTP
 return
+
 HKg2:
 BR := -5
 Gosub,SetBRandTP
 return
+
 HKg3:
 TP := 100
 Gosub,SetBRandTP
 return
+
 HKg4:
 TP := -100
 Gosub,SetBRandTP
 return
+
 HKg5:
 Send,{Volume_Up}
 SoundGet, master_volume
 ToolTip("Ses: "  Round(master_volume) , , , 1, 2000)
 return
 return
+
 HKg6:
 Send,{Volume_Down}
 SoundGet, master_volume
 ToolTip("Ses: "  Round(master_volume) , , , 1, 2000)
 return
 return
+
 HKg7:
 if(MouseIsOVer("ahk_class Shell_TrayWnd") != "0x0")
 	Send,{Volume_Mute}
