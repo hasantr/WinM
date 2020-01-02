@@ -3,17 +3,15 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 
-; GLOBAL SETTINGS ===============================================================================================================
+; GLOBAL SETTINGS ========================================================
 Menu, Tray, NoStandard
-
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force
 #Persistent
-
 CoordMode, Mouse, Screen
 SetBatchLines -1
 
-
+{ ;REGİSTRY
 RegRead, FirstStartVal,HKEY_CURRENT_USER\SOFTWARE\WinM,FirstStart
 if FirstStartVal != 1
 {	
@@ -33,15 +31,26 @@ RegRead, Temp,HKEY_CURRENT_USER\SOFTWARE\WinM,Temperature
 RegRead, CheckStatus,HKEY_CURRENT_USER\SOFTWARE\WinM,MouseControl
 RegRead, TryNotifyIconStat,HKEY_CURRENT_USER\SOFTWARE\WinM,TryNotifyIcon
 RegRead, ShiftAndWheelOption,HKEY_CURRENT_USER\SOFTWARE\WinM,ShiftAndWheel
+}
+
+;APPLİCATİON START. SET TEMP AND BRİGHT
+
+Tolerance(Sunrise:=0,Sunset:=0,Cloudiness:=0,Visiblity:=0)
+{
+	
+}
+
+
 Monitor.SetColorTemperature(Temp, Bright / 100)
 if(TryNotifyIconStat != 1)
 	Menu, Tray, NoIcon
 
+;##################### MENUS ############################################
+{ ;MENUS
 Menu Tray, Add, &Save Settings, RegistrySave
 Menu Tray, Icon, &Save Settings, shell32.dll, 259
 Menu Tray, Add, Hotkeys..., HotkeysGui
 Menu Tray, Icon, Hotkeys..., shell32.dll, 166
-
 
 Menu FileMenu, Add, &Save Settings, RegistrySave
 Menu FileMenu, Icon, &Save Settings, shell32.dll, 259
@@ -63,62 +72,103 @@ Menu MenuBar, Add, &Help, :AboutMenu
 Menu MenuBar, Icon, &Help, shell32.dll, 24
 Gui Menu, MenuBar
 
+}
+;##################### MENUS ############################################
 
+;##################### WEATHER DAY LİGHT GUI. TOP #######################
+{ ;WEATHER DAY LİGHT GUI. TOP
+	
+	Gui Add, Text, x184 y3 w156 h23 +0x200, Coord:
+	Gui Add, Text, x64 y2 w99 h23 +0x200, City
+	Gui Add, Button, x8 y3 w53 h23, Region
+	Gui Add, Text, x8 y34 w333 h2 +0x10
+	
+	Gui Add, Text, x24 y72 w66 h23 +0x200, Tolerance: `%
+	Gui Add, Slider, x24 y96 w120 h23, 50
+	Gui Add, Text, x96 y72 w30 h23 +0x200 , Text
+	Gui Add, GroupBox, x8 y48 w156 h77
+	Gui Add, Text, x200 y72 w66 h23 +0x200 , Tolerance: `%
+	Gui Add, Text, x272 y72 w31 h23 +0x200 , Text
+	Gui Add, Slider, x200 y96 w120 h22, 50
+	Gui Add, GroupBox, x184 y48 w156 h77
+	Gui Add, CheckBox, x192 y44 w68 h23, Weather
+	Gui Add, CheckBox, x16 y44 w68 h23, Day Light
+	
+	Gui Add, Button, hWndHDylightSet x312 y56 w26 h23,&
+	SetButtonIcon(HDylightSet, "wmploc.DLL", 18)
+	Gui Add, Button,hWndHWethrSet x136 y56 w26 h23,&
+	SetButtonIcon(HWethrSet, "wmploc.DLL", 18)
+	SetButtonIcon(hButton, File, Index, Size := 16) {
+		hIcon := LoadPicture(File, "h" . Size . " Icon" . Index, _)
+		SendMessage 0xF7, 1, %hIcon%,, ahk_id %hButton% ; BM_SETIMAGE
+	}
+}
+;##################### WEATHER DAY LİGHT GUI. TOP #######################
 
+;##################### MAİN GUI ##########################################
+{ ;MAİN GUI
 Gui +hWndhMainWnd
 Gui Color, 0xFEFFDD
-Gui Add, Slider, x16 y61 w321 h44  Line2 Page5 TickInterval3 Range0-100 Thick30 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
-Gui Add, Slider, x16 y184 w321 h43 Line2 Page100 TickInterval180 Range600-5600 Thick30 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
-Gui Add, CheckBox, x8 y248  h16 gGChecked vVChecked, Control of the edges of the screen.
-Gui Add, CheckBox, x200 y248  h16 gGShiftWheel vVShiftWheel,With Shift + Wheel control.
-Gui Add, CheckBox, x200 y270  h16 gGTRYMenuShow vVTRYMenuShow, Show notification area.
-Gui Add, CheckBox, x8 y270  h16 vVAutoStart gGAutoStart, Start at the start of the system.
-GuiControl,,VChecked,% CheckStatus
-GuiControl,,VTRYMenuShow,% TryNotifyIconStat
-StartupAdress := A_ScriptFullPath . " /systemStartup"
-if(AutoStart == StartupAdress) ;"\autostart" registry parameters (detect system startup)
-	GuiControl,,VAutoStart, 1
-else
-	GuiControl,,VAutoStart,0
-if(ShiftAndWheelOption == 1)
-	GuiControl,,VShiftWheel,1
-
-
+Gui Add, GroupBox, x8 y150 w335 h107, Brightness:
 Gui Font, s13 ;c0xFBFBFB
-Gui Add, Text, x172 y32 w59 h23 +0x200 vVBRtext, % Bright
-Gui Add, Text, x162 y152 w60 h23 +0x200 vVTPtext, % Temp
+Gui Add, Text, x172 y174 w85 h23 +0x200 vVBRtext, % Bright
 Gui Font
-Gui Add, GroupBox, x8 y8 w335 h107, Brightness:
-Gui Add, GroupBox, x8 y128 w336 h108, Temperature:
-Gui Add, Button, x290 y290 w50 h26 gSifirla, Reset
+Gui Add, Slider, x16 y203 w321 h44  Line2 Page5 TickInterval3 Range0-100 Thick30 +Center +0x20 Tooltip vVBright  gGBright AltSubmit, % Bright
+Gui Add, GroupBox, x8 y270 w336 h108, Temperature:
+Gui Font, s13 ;c0xFBFBFB
+Gui Add, Text, x162 y294 w60 h23 +0x200 vVTPtext, % Temp
+Gui Font
+Gui Add, Slider, x16 y326 w321 h43 Line2 Page100 TickInterval180 Range600-5600 Thick30 +Center +0x20 +Tooltip vVTemp  gGTemp AltSubmit, % Temp
+Gui Add, CheckBox, x8 y390 h16 gGChecked vVChecked, Control of the edges of the screen.
+Gui Add, CheckBox, x200 y390  h16 gGShiftWheel vVShiftWheel,With Shift + Wheel control.
+Gui Add, CheckBox, x8 y412  h16 vVAutoStart gGAutoStart, Start at the start of the system.
+Gui Add, CheckBox, x200 y412 h16 gGTRYMenuShow vVTRYMenuShow, Show notification area.
 
-if GuiGoster == 1
-	Gui Show, w350 h320, Brightness and Temperature Control
+}
+;##################### MAİN GUI ##########################################
 
-start = %1%
-if(start == "") ;if it did not start with windows startup. show gui.
-	Gui Show, w350 h320, Brightness and Temperature Control
-
-
-TrayMinimizer.Init(false)	; <-- Initializes and optionally minimizes
-
+;##################### OTHOR GUI APPLICAON START CONTROOLLER #############
+{ ;OTHOR GUI FIRST START CONTROOLLER
+	GuiControl,,VChecked,% CheckStatus
+	GuiControl,,VTRYMenuShow,% TryNotifyIconStat
+	StartupAdress := A_ScriptFullPath . " /systemStartup"
+	if(AutoStart == StartupAdress) ;"\autostart" registry parameters (detect system startup)
+		GuiControl,,VAutoStart, 1
+	else
+		GuiControl,,VAutoStart,0
+	if(ShiftAndWheelOption == 1)
+		GuiControl,,VShiftWheel,1
+	
+	
+	Gui Add, Button, x290 y432 w50 h26 gSifirla, Reset 
+	
+	if GuiGoster == 1
+		Gui Show, w350 h462, Brightness and Temperature Control
+	
+	start = %1%
+	if(start == "") ;if it did not start with windows startup. show gui.
+		Gui Show, w350 h462, Brightness and Temperature Control
+	
+	TrayMinimizer.Init(false)	; <-- Initializes and optionally minimizes
+	
 ;#Include %A_ScriptDir% \"Bright Temp HotkeyGui.ahk"
 ;#Include Bright Temp HotkeyGui.ahk
+} 
+;##################### OTHOR GUI APPLICAON START CONTROOLLER #############
 
-
-;##################### HOTKEY GUI ############################################
-;##################### HOTKEY GUI ############################################
+;##################### HOTKEY GUI #########################################
+{ ;##################### HOTKEY GUI #######################################
 Loop,7
-	{
-		RegRead, CHstat%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,CHKey%A_Index%
-		RegRead, HK%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,HKey%A_Index%
-		
-		if(HK%A_index% != "")
-			if(CHstat%A_index% == "+Checked")
-				Hotkey,  % "#" HK%A_index% , HKg%A_index%
-		Else
-			Hotkey, % HK%A_index%, HKg%A_index%
-	}	
+{
+	RegRead, CHstat%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,CHKey%A_Index%
+	RegRead, HK%A_index%,HKEY_CURRENT_USER\SOFTWARE\WinM,HKey%A_Index%
+	
+	if(HK%A_index% != "")
+		if(CHstat%A_index% == "+Checked")
+			Hotkey,  % "#" HK%A_index% , HKg%A_index%
+	Else
+		Hotkey, % HK%A_index%, HKg%A_index%
+}	
 Gui HK:Add, Hotkey, x16 y64 w120 h21 vHK1 , %HK1%
 Gui HK:Add, Hotkey, x192 y64 w120 h21 vHK2 , %HK2%
 Gui HK:Add, Hotkey, x16 y136 w120 h21 vHK3 , %HK3%
@@ -197,8 +247,8 @@ return
 HKg7:
 if(MouseIsOVer("ahk_class Shell_TrayWnd") != "0x0")
 	Send,{Volume_Mute}
-;##################### HOTKEY GUI ############################################
-;##################### HOTKEY GUI ############################################
+} ;##################### HOTKEY GUI ############################################
+;##################### HOTKEY GUI #########################################
 
 Return
 
@@ -601,5 +651,360 @@ class TrayMinimizer {
 	Menu( MenuName, Cmd, P3 := "", P4 := "", P5 := "" ) {
 		Menu, % MenuName, % Cmd, % P3, % P4, % P5
 		Return errorLevel
+	}
+}
+
+
+
+
+
+
+
+
+
+class CocoJson
+{
+	/**
+		* Method: Load
+		*     Parses a JSON string into an AHK value
+		* Syntax:
+		*     value := JSON.Load( text [, reviver ] )
+		* Parameter(s):
+		*     value      [retval] - parsed value
+		*     text    [in, ByRef] - JSON formatted string
+		*     reviver   [in, opt] - function object, similar to JavaScript's
+		*                           JSON.parse() 'reviver' parameter
+	*/
+	class Load extends CocoJson.Functor
+	{
+		Call(self, ByRef text, reviver:="")
+		{
+			this.rev := IsObject(reviver) ? reviver : false
+      ; Object keys(and array indices) are temporarily stored in arrays so that
+      ; we can enumerate them in the order they appear in the document/text instead
+      ; of alphabetically. Skip if no reviver function is specified.
+			this.keys := this.rev ? {} : false
+			
+			static quot := Chr(34), bashq := "\" . quot
+              , json_value := quot . "{[01234567890-tfn"
+              , json_value_or_array_closing := quot . "{[]01234567890-tfn"
+              , object_key_or_object_closing := quot . "}"
+			
+			key := ""
+			is_key := false
+			root := {}
+			stack := [root]
+			next := json_value
+			pos := 0
+			
+			while ((ch := SubStr(text, ++pos, 1)) != "") {
+				if InStr(" `t`r`n", ch)
+					continue
+				if !InStr(next, ch, 1)
+					this.ParseError(next, text, pos)
+				
+				holder := stack[1]
+				is_array := holder.IsArray
+				
+				if InStr(",:", ch) {
+					next := (is_key := !is_array && ch == ",") ? quot : json_value
+					
+				} else if InStr("}]", ch) {
+					ObjRemoveAt(stack, 1)
+					next := stack[1]==root ? "" : stack[1].IsArray ? ",]" : ",}"
+					
+				} else {
+					if InStr("{[", ch) {
+               ; Check if Array() is overridden and if its return value has
+               ; the 'IsArray' property. If so, Array() will be called normally,
+               ; otherwise, use a custom base object for arrays
+						static json_array := Func("Array").IsBuiltIn || ![].IsArray ? {IsArray: true} : 0
+						
+               ; sacrifice readability for minor(actually negligible) performance gain
+						(ch == "{")
+                     ? ( is_key := true
+                       , value := {}
+                       , next := object_key_or_object_closing )
+                  ; ch == "["
+                     : ( value := json_array ? new json_array : []
+                       , next := json_value_or_array_closing )
+						
+						ObjInsertAt(stack, 1, value)
+						
+						if (this.keys)
+							this.keys[value] := []
+						
+					} else {
+						if (ch == quot) {
+							i := pos
+							while (i := InStr(text, quot,, i+1)) {
+								value := StrReplace(SubStr(text, pos+1, i-pos-1), "\\", "\u005c")
+								
+								static tail := A_AhkVersion<"2" ? 0 : -1
+								if (SubStr(value, tail) != "\")
+									break
+							}
+							
+							if (!i)
+								this.ParseError("'", text, pos)
+							
+							value := StrReplace(value,  "\/",  "/")
+                     , value := StrReplace(value, bashq, quot)
+                     , value := StrReplace(value,  "\b", "`b")
+                     , value := StrReplace(value,  "\f", "`f")
+                     , value := StrReplace(value,  "\n", "`n")
+                     , value := StrReplace(value,  "\r", "`r")
+                     , value := StrReplace(value,  "\t", "`t")
+							
+							pos := i ; update pos
+							
+							i := 0
+							while (i := InStr(value, "\",, i+1)) {
+								if !(SubStr(value, i+1, 1) == "u")
+									this.ParseError("\", text, pos - StrLen(SubStr(value, i+1)))
+								
+								uffff := Abs("0x" . SubStr(value, i+2, 4))
+								if (A_IsUnicode || uffff < 0x100)
+									value := SubStr(value, 1, i-1) . Chr(uffff) . SubStr(value, i+6)
+							}
+							
+							if (is_key) {
+								key := value, next := ":"
+								continue
+							}
+							
+						} else {
+							value := SubStr(text, pos, i := RegExMatch(text, "[\]\},\s]|$",, pos)-pos)
+							
+							static number := "number", integer :="integer"
+							if value is %number%
+							{
+								if value is %integer%
+									value += 0
+							}
+							else if (value == "true" || value == "false")
+								value := %value% + 0
+							else if (value == "null")
+								value := ""
+							else
+                     ; we can do more here to pinpoint the actual culprit
+                     ; but that's just too much extra work.
+								this.ParseError(next, text, pos, i)
+							
+							pos += i-1
+						}
+						
+						next := holder==root ? "" : is_array ? ",]" : ",}"
+					} ; If InStr("{[", ch) { ... } else
+					
+					is_array? key := ObjPush(holder, value) : holder[key] := value
+					
+					if (this.keys && this.keys.HasKey(holder))
+						this.keys[holder].Push(key)
+				}
+				
+			} ; while ( ... )
+			
+			return this.rev ? this.Walk(root, "") : root[""]
+		}
+		
+		ParseError(expect, ByRef text, pos, len:=1)
+		{
+			static quot := Chr(34), qurly := quot . "}"
+			
+			line := StrSplit(SubStr(text, 1, pos), "`n", "`r").Length()
+			col := pos - InStr(text, "`n",, -(StrLen(text)-pos+1))
+			msg := Format("{1}`n`nLine:`t{2}`nCol:`t{3}`nChar:`t{4}"
+         ,     (expect == "")     ? "Extra data"
+             : (expect == "'")    ? "Unterminated string starting at"
+             : (expect == "\")    ? "Invalid \escape"
+             : (expect == ":")    ? "Expecting ':' delimiter"
+             : (expect == quot)   ? "Expecting object key enclosed in double quotes"
+             : (expect == qurly)  ? "Expecting object key enclosed in double quotes or object closing '}'"
+             : (expect == ",}")   ? "Expecting ',' delimiter or object closing '}'"
+             : (expect == ",]")   ? "Expecting ',' delimiter or array closing ']'"
+             : InStr(expect, "]") ? "Expecting JSON value or array closing ']'"
+             :                      "Expecting JSON value(string, number, true, false, null, object or array)"
+         , line, col, pos)
+			
+			static offset := A_AhkVersion<"2" ? -3 : -4
+			throw Exception(msg, offset, SubStr(text, pos, len))
+		}
+		
+		Walk(holder, key)
+		{
+			value := holder[key]
+			if IsObject(value) {
+				for i, k in this.keys[value] {
+               ; check if ObjHasKey(value, k) ??
+					v := this.Walk(value, k)
+					if (v != CocoJson.Undefined)
+						value[k] := v
+					else
+						ObjDelete(value, k)
+				}
+			}
+			
+			return this.rev.Call(holder, key, value)
+		}
+	}
+	
+	/**
+		* Method: Dump
+		*     Converts an AHK value into a JSON string
+		* Syntax:
+		*     str := CocoJson.Dump( value [, replacer, space ] )
+		* Parameter(s):
+		*     str        [retval] - JSON representation of an AHK value
+		*     value          [in] - any value(object, string, number)
+		*     replacer  [in, opt] - function object, similar to JavaScript's
+		*                           CocoJson.stringify() 'replacer' parameter
+		*     space     [in, opt] - similar to JavaScript's CocoJson.stringify()
+		*                           'space' parameter
+	*/
+	class Dump extends CocoJson.Functor
+	{
+		Call(self, value, replacer:="", space:="")
+		{
+			this.rep := IsObject(replacer) ? replacer : ""
+			
+			this.gap := ""
+			if (space) {
+				static integer := "integer"
+				if space is %integer%
+					Loop, % ((n := Abs(space))>10 ? 10 : n)
+						this.gap .= " "
+				else
+					this.gap := SubStr(space, 1, 10)
+				
+				this.indent := "`n"
+			}
+			
+			return this.Str({"": value}, "")
+		}
+		
+		Str(holder, key)
+		{
+			value := holder[key]
+			
+			if (this.rep)
+				value := this.rep.Call(holder, key, ObjHasKey(holder, key) ? value : CocoJson.Undefined)
+			
+			if IsObject(value) {
+         ; Check object type, skip serialization for other object types such as
+         ; ComObject, Func, BoundFunc, FileObject, RegExMatchObject, Property, etc.
+				static type := A_AhkVersion<"2" ? "" : Func("Type")
+				if (type ? type.Call(value) == "Object" : ObjGetCapacity(value) != "") {
+					if (this.gap) {
+						stepback := this.indent
+						this.indent .= this.gap
+					}
+					
+					is_array := value.IsArray
+            ; Array() is not overridden, rollback to old method of
+            ; identifying array-like objects. Due to the use of a for-loop
+            ; sparse arrays such as '[1,,3]' are detected as objects({}). 
+					if (!is_array) {
+						for i in value
+							is_array := i == A_Index
+						until !is_array
+					}
+					
+					str := ""
+					if (is_array) {
+						Loop, % value.Length() {
+							if (this.gap)
+								str .= this.indent
+							
+							v := this.Str(value, A_Index)
+							str .= (v != "") ? v . "," : "null,"
+						}
+					} else {
+						colon := this.gap ? ": " : ":"
+						for k in value {
+							v := this.Str(value, k)
+							if (v != "") {
+								if (this.gap)
+									str .= this.indent
+								
+								str .= this.Quote(k) . colon . v . ","
+							}
+						}
+					}
+					
+					if (str != "") {
+						str := RTrim(str, ",")
+						if (this.gap)
+							str .= stepback
+					}
+					
+					if (this.gap)
+						this.indent := stepback
+					
+					return is_array ? "[" . str . "]" : "{" . str . "}"
+				}
+				
+			} else ; is_number ? value : "value"
+				return ObjGetCapacity([value], 1)=="" ? value : this.Quote(value)
+		}
+		
+		Quote(string)
+		{
+			static quot := Chr(34), bashq := "\" . quot
+			
+			if (string != "") {
+				string := StrReplace(string,  "\",  "\\")
+            ; , string := StrReplace(string,  "/",  "\/") ; optional in ECMAScript
+            , string := StrReplace(string, quot, bashq)
+            , string := StrReplace(string, "`b",  "\b")
+            , string := StrReplace(string, "`f",  "\f")
+            , string := StrReplace(string, "`n",  "\n")
+            , string := StrReplace(string, "`r",  "\r")
+            , string := StrReplace(string, "`t",  "\t")
+				
+				static rx_escapable := A_AhkVersion<"2" ? "O)[^\x20-\x7e]" : "[^\x20-\x7e]"
+				while RegExMatch(string, rx_escapable, m)
+					string := StrReplace(string, m.Value, Format("\u{1:04x}", Ord(m.Value)))
+			}
+			
+			return quot . string . quot
+		}
+	}
+	
+	/**
+		* Property: Undefined
+		*     Proxy for 'undefined' type
+		* Syntax:
+		*     undefined := CocoJson.Undefined
+		* Remarks:
+		*     For use with reviver and replacer functions since AutoHotkey does not
+		*     have an 'undefined' type. Returning blank("") or 0 won't work since these
+		*     can't be distnguished from actual JSON values. This leaves us with objects.
+		*     Replacer() - the caller may return a non-serializable AHK objects such as
+		*     ComObject, Func, BoundFunc, FileObject, RegExMatchObject, and Property to
+		*     mimic the behavior of returning 'undefined' in JavaScript but for the sake
+		*     of code readability and convenience, it's better to do 'return CocoJson.Undefined'.
+		*     Internally, the property returns a ComObject with the variant type of VT_EMPTY.
+	*/
+	Undefined[]
+	{
+		get {
+			static empty := {}, vt_empty := ComObject(0, &empty, 1)
+			return vt_empty
+		}
+	}
+	
+	class Functor
+	{
+		__Call(method, ByRef arg, args*)
+		{
+      ; When casting to Call(), use a new instance of the "function object"
+      ; so as to avoid directly storing the properties(used across sub-methods)
+      ; into the "function object" itself.
+			if IsObject(method)
+				return (new this).Call(method, arg, args*)
+			else if (method == "")
+				return (new this).Call(arg, args*)
+		}
 	}
 }
